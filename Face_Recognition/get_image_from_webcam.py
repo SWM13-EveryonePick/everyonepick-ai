@@ -64,7 +64,7 @@ while cap.isOpened():
                     face_2d.append([x, y])
 
                     # Get the 3D Coordinates
-                    face_3d.append([x, y, lm.z])
+                    face_3d.append([x, y, lm.z * 5])
 
             # Convert it to the NumPy array
             face_2d = np.array(face_2d, dtype=np.float64)
