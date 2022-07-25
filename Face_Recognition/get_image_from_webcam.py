@@ -1,3 +1,5 @@
+import os.path
+
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -18,6 +20,15 @@ mp_drawing_styles = mp.solutions.drawing_styles
 
 
 cap = cv2.VideoCapture(0)
+
+E_count = 0
+W_count = 0
+S_count = 0
+N_count = 0
+NW_count = 0
+SE_count = 0
+NE_count = 0
+SW_count = 0
 
 while cap.isOpened():
     success, image = cap.read()
@@ -97,15 +108,57 @@ while cap.isOpened():
             y = angles[1] * 360
             z = angles[2] * 360
 
+
+
             # See where the user's head tilting
-            if y < -10:
-                text = "Looking Left"
-            elif y > 10:
-                text = "Looking Right"
-            elif x < -10:
-                text = "Looking Down"
-            elif x > 10:
-                text = "Looking Up"
+            # East
+            if y > 20 and -5 < x < 5:
+                if E_count < 10:
+                    cv2.imwrite(os.path.join("../output", "E_{}.jpg".format(E_count)), image)
+                    E_count += 1
+                text = "Looking East"
+            # West
+            elif y < -20 and -5 < x < 5:
+                if W_count < 10:
+                    cv2.imwrite(os.path.join("../output", "W_{}.jpg".format(W_count)), image)
+                    W_count += 1
+                text = "Looking West"
+            # South
+            elif x < -20 and -5 < y < 5:
+                if S_count < 10:
+                    cv2.imwrite(os.path.join("../output", "S_{}.jpg".format(S_count)), image)
+                    S_count += 1
+                text = "Looking South"
+            # North
+            elif x > 20 and -5 < y < 5:
+                if N_count < 10:
+                    cv2.imwrite(os.path.join("../output", "N_{}.jpg".format(N_count)), image)
+                    N_count += 1
+                text = "Looking North"
+            # North-East
+            elif x > 20 and y > 20:
+                if NE_count < 10:
+                    cv2.imwrite(os.path.join("../output", "NE_{}.jpg".format(NE_count)), image)
+                    NE_count += 1
+                text = "Looking North-East"
+            # South-East
+            elif x < -20 and y > 20:
+                if SE_count < 10:
+                    cv2.imwrite(os.path.join("../output", "SE_{}.jpg".format(SE_count)), image)
+                    SE_count += 1
+                text = "Looking South-East"
+            # South-West
+            elif x < -20 and y < -20:
+                if SW_count < 10:
+                    cv2.imwrite(os.path.join("../output", "SW_{}.jpg".format(SW_count)), image)
+                    SW_count += 1
+                text = "Looking South-West"
+            # North-West
+            elif x > 20 and y < -20:
+                if NW_count < 10:
+                    cv2.imwrite(os.path.join("../output", "NW_{}.jpg".format(NW_count)), image)
+                    NW_count += 1
+                text = "Looking North-East"
             else:
                 text = "Forward"
 
