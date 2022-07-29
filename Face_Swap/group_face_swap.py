@@ -17,6 +17,7 @@ user_choices['B'].append(0)
 user_choices['C'].append(2)
 user_choices['D'].extend([0, 2])
 
+# 가장 많은 선택을 받은 사진을 찾는 함수
 def find_base_photo(user_choices):
     # 아무도 선택 하지 않은 경우
     if len(user_choices) == 0:
@@ -38,4 +39,23 @@ def find_base_photo(user_choices):
         if choice == max_choice:
             base_photo.append(photo)
 
+    ''' base 사진이 여러개 가능할 경우 후보군 중에 어떤 base 사진이 가장 최적인지 계산하는 코드 추가 에정
+    ex. 얼굴 각도 계산을 통해 가장 자연스럽게 얼굴이 합성될 수 있는 케이스 찾기 '''
+
     return base_photo
+
+
+# face swap이 필요한 user_id와 source 사진을 찾는 함수
+def list_of_face_swap(user_choices, base_photo):
+    ''' 현재 사용자 별 선택 사진 예시로는 group3 사진에서의 사용자 C얼굴을 group1 사진에 합성하면 되지만,
+    만약 사용자 C가 group2, 3을 선택했다면 group2, 3 사진 중에서 어떤 얼굴을 합성할 지 결정하는 과정 추가 예정
+    ex. 얼굴 각도 계산을 통해 가장 자연스럽게 얼굴이 합성될 수 있는 케이스 찾기 '''
+
+    source_target_list = []
+
+    for user, choices in user_choices.items():
+        if base_photo not in choices:
+            # 임시로 첫 번째 선택 사진을 target 사진으로 결정
+            source_target_list.append((user, choices[0]))
+
+    return source_target_list
