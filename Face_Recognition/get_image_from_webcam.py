@@ -6,12 +6,17 @@ import numpy as np
 import time
 
 mp_face_mesh = mp.solutions.face_mesh
+mp_face_detection = mp.solutions.face_detection
 
 face_mesh = mp_face_mesh.FaceMesh(
             max_num_faces=1,
             refine_landmarks=True,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5)
+
+face_detection = mp_face_detection.FaceDetection(
+    model_selection=0,
+    min_detection_confidence=0.5)
 
 mp_drawing = mp.solutions.drawing_utils
 
@@ -44,7 +49,8 @@ while cap.isOpened():
     image = cv2.cvtColor(cv2.flip(image, 1), cv2.COLOR_BGR2RGB)
 
     # Get the result
-    results = face_mesh.process(image)
+    mesh_results = face_mesh.process(image)
+    detect_results = face_detection.process(image)
 
     # Draw the face mesh annotations on the image.
     image.flags.writeable = True
@@ -54,8 +60,12 @@ while cap.isOpened():
     face_3d = []
     face_2d = []
 
-    if results.multi_face_landmarks:
-        for face_landmarks in results.multi_face_landmarks:
+    if detect_results.detections:
+        for detection in detect_results.detections:
+            mp_drawing.draw_detection(image, detection)
+
+    if mesh_results.multi_face_landmarks:
+        for face_landmarks in mesh_results.multi_face_landmarks:
             for idx, lm in enumerate(face_landmarks.landmark):
                 # idx: 1 -> Tip of the nose
                 # idx: 61 -> Left corner of the mouth
