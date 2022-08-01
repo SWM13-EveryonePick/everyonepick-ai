@@ -84,7 +84,7 @@ def get_embeddings(faces):
     return embeddings
 
 
-def face_recognition(group_embeddings, target_embedding):
+def compute_face_similarity(group_embeddings, target_embedding):
     # 임베딩 정규화
     normed_target_embedding = target_embedding / l2norm(target_embedding)
     normed_group_embeddings = []
