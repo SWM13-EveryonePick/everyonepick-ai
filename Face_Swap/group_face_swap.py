@@ -1,6 +1,8 @@
 from collections import defaultdict, Counter
 import cv2
 from insightface.app import FaceAnalysis
+import numpy as np
+from numpy.linalg import norm as l2norm
 
 ''' 
 사용자 별로 선호하는 사진 선택 결과 예시
@@ -72,3 +74,17 @@ def face_analysis(img_path):
     img = img[:, :, ::-1]
     faces = face_app.get(img)
     return faces
+
+
+def face_recognition(group_embeddings, target_embedding):
+    # 임베딩 정규화
+    normed_target_embedding = target_embedding / l2norm(target_embedding)
+    normed_group_embeddings = []
+    for embedding in group_embeddings:
+        normed_group_embeddings.append(embedding / l2norm(embedding))
+
+    normed_group_embeddings = np.array(normed_group_embeddings, dtype=np.float32)
+    # 코사인 유사도 계산
+    sims = np.dot(normed_target_embedding, normed_group_embeddings.T)
+
+    return sims
