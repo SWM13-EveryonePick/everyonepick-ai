@@ -1,4 +1,6 @@
 from collections import defaultdict, Counter
+import cv2
+from insightface.app import FaceAnalysis
 
 ''' 
 사용자 별로 선호하는 사진 선택 결과 예시
@@ -7,6 +9,10 @@ id:B → group1
 id:C → group3 
 id:D → group1, group3
 '''
+
+# insightface Resnet100_Glint360k 얼굴 분석기 모델
+face_app = FaceAnalysis('antelopev2')
+face_app.prepare(ctx_id=0, det_size=(640, 640))
 
 group_photo_path = ["../img_data/group1.jpeg", "../img_data/group2.jpeg", "../img_data/group3.jpeg"]
 user_choices = defaultdict(list)
@@ -59,3 +65,10 @@ def list_of_face_swap(user_choices, base_photo):
             source_target_list.append((user, choices[0]))
 
     return source_target_list
+
+
+def face_analysis(img_path):
+    img = cv2.imread(img_path)
+    img = img[:, :, ::-1]
+    faces = face_app.get(img)
+    return faces
