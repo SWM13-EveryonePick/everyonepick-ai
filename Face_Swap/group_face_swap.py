@@ -95,7 +95,7 @@ def compute_face_similarity(group_embeddings, target_embedding):
     # 코사인 유사도 계산
     sims = np.dot(normed_target_embedding, normed_group_embeddings.T)
 
-    return sims
+    return list(sims)
 
 
 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
         # 사용자의 기본 임베딩 가져오기
         user_embedding = user_face[0]['embedding']
         # 베이스 사진에서 사용자 얼굴의 index 찾기
-        target_user_sims = list(compute_face_similarity(target_embeddings, user_embedding))
+        target_user_sims = compute_face_similarity(target_embeddings, user_embedding)
         target_user_index = target_user_sims.index(max(target_user_sims))
         # 베이스 사진에서 사용자 얼굴의 landmarks 찾기
         target_user_landmarks = target_faces[target_user_index]['landmark_2d_106']
@@ -128,7 +128,7 @@ if __name__ == "__main__":
         # 사용자가 선택한 사진 얼굴들의 임베딩 가져오기
         source_embeddings = get_embeddings(source_faces)
         # 사용자가 선택한 사진에서 사용자 얼굴의 index 찾기
-        source_user_sims = list(compute_face_similarity(source_embeddings, user_embedding))
+        source_user_sims = compute_face_similarity(source_embeddings, user_embedding)
         source_user_index = source_user_sims.index(max(source_user_sims))
         # 사용자가 선택한 사진에서 사용자 얼굴의 landmarks 찾기
         source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
