@@ -69,6 +69,8 @@ def list_of_face_swap(user_choices, base_photo):
     return source_target_list
 
 
+# insightface 모델로 얼굴 정보 분석하는 함수
+# bbox, kps, det_score, landmark_3d_69, pose, landmark_2d_106, gender, embedding 포함
 def face_analysis(img_path):
     img = cv2.imread(img_path)
     img = img[:, :, ::-1]
@@ -76,6 +78,7 @@ def face_analysis(img_path):
     return faces
 
 
+# 얼굴 임베딩 리스트 반환하는 함수
 def get_embeddings(faces):
     embeddings = []
     for face in faces:
@@ -84,6 +87,7 @@ def get_embeddings(faces):
     return embeddings
 
 
+# target_embedding과 그룹 사진 얼굴들과의 유사도 측정하는 함수
 def compute_face_similarity(group_embeddings, target_embedding):
     # 임베딩 정규화
     normed_target_embedding = target_embedding / l2norm(target_embedding)
