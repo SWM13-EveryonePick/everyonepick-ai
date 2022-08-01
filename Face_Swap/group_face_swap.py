@@ -96,3 +96,39 @@ def compute_face_similarity(group_embeddings, target_embedding):
     sims = np.dot(normed_target_embedding, normed_group_embeddings.T)
 
     return sims
+
+
+
+if __name__ == "__main__":
+    # 지금 설정한 케이스 예시에는 베이스 사진이 하나기 때문에 index 0으로 설정
+    target_photo = find_base_photo(user_choices)[0]
+    # 베이스 사진의 얼굴 정보 분석
+    target_faces = face_analysis(group_photo_path[target_photo])
+    # 베이스 사진 얼굴들의 임베딩 가져오기
+    target_embeddings = get_embeddings(target_faces)
+
+    # face swap이 들어가야 되는 사용자와 해당 사용자가 선택한 사진 번호 반환
+    face_swap_list = list_of_face_swap(user_choices, target_photo)
+
+    # db에 저장된 사용자의 얼굴 정보 가져오기 (아래 코드는 임시 작성)
+    user_face = face_analysis('../img_data/jh.jpeg')
+
+    # user : C, choice : 2
+    for user, choice in face_swap_list:
+        # 사용자의 기본 임베딩 가져오기
+        user_embedding = user_face[0]['embedding']
+        # 베이스 사진에서 사용자 얼굴의 index 찾기
+        target_user_sims = list(compute_face_similarity(target_embeddings, user_embedding))
+        target_user_index = target_user_sims.index(max(target_user_sims))
+        # 베이스 사진에서 사용자 얼굴의 landmarks 찾기
+        target_user_landmarks = target_faces[target_user_index]['landmark_2d_106']
+
+        # 사용자가 선택한 사진의 얼굴 정보 분석
+        source_faces = face_analysis(group_photo_path[choice])
+        # 사용자가 선택한 사진 얼굴들의 임베딩 가져오기
+        source_embeddings = get_embeddings(source_faces)
+        # 사용자가 선택한 사진에서 사용자 얼굴의 index 찾기
+        source_user_sims = list(compute_face_similarity(source_embeddings, user_embedding))
+        source_user_index = source_user_sims.index(max(source_user_sims))
+        # 사용자가 선택한 사진에서 사용자 얼굴의 landmarks 찾기
+        source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
