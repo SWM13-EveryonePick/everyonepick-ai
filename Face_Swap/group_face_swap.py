@@ -76,6 +76,14 @@ def face_analysis(img_path):
     return faces
 
 
+def get_embeddings(faces):
+    embeddings = []
+    for face in faces:
+        embeddings.append(face['embedding'])
+
+    return embeddings
+
+
 def face_recognition(group_embeddings, target_embedding):
     # 임베딩 정규화
     normed_target_embedding = target_embedding / l2norm(target_embedding)
