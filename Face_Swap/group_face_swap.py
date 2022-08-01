@@ -102,6 +102,18 @@ def compute_face_similarity(group_embeddings, target_embedding):
     return sims
 
 
+# landmark 데이터 타입을 int로 형 변환 하는 함수
+def cast_int_landmarks(landmarks):
+    result = []
+
+    for i in range(landmarks.shape[0]):
+        point = tuple(landmarks[i])
+        x = int(point[0])
+        y = int(point[1])
+        result.append((x, y))
+
+    return result
+
 
 if __name__ == "__main__":
     # 지금 설정한 케이스 예시에는 베이스 사진이 하나기 때문에 index 0으로 설정
