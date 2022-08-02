@@ -115,6 +115,51 @@ def cast_int_landmarks(landmarks):
     return result
 
 
+# nparray에서 0번째 값 반환
+def extract_index_nparray(nparray):
+    index = None
+    for num in nparray[0]:
+        index = num
+        break
+    return index
+
+
+# img에서 특정 얼굴의 들로네 삼각망 구하기
+def get_delaunay_traingles(img, mask, landmarks):
+    points = np.array(landmarks, np.int32)
+    # 얼굴 특징점 경계선 추출
+    convexhull = cv2.convexHull(points)
+    cv2.fillConvexPoly(mask, convexhull, 255)
+    # 얼굴 특징점 경계선을 따라 얼굴 이미지 추출
+    face_image = cv2.bitwise_and(img, img, mask=mask)
+    # 얼굴 들로네 삼각망 구축
+    rect = cv2.boundingRect(convexhull)
+    subdiv = cv2.Subdiv2D(rect)
+    subdiv.insert(landmarks)
+    triangles = subdiv.getTriangleList()
+    triangles = np.array(triangles, dtype=np.int32)
+
+    # 들로네 삼각망의 triangles 인덱스 구하기
+    indexes_triangles = []
+    for t in triangles:
+        pt1 = (t[0], t[1])
+        pt2 = (t[2], t[3])
+        pt3 = (t[4], t[5])
+
+        index_pt1 = np.where((points == pt1).all(axis=1))
+        index_pt1 = extract_index_nparray(index_pt1)
+        index_pt2 = np.where((points == pt2).all(axis=1))
+        index_pt2 = extract_index_nparray(index_pt2)
+        index_pt3 = np.where((points == pt3).all(axis=1))
+        index_pt3 = extract_index_nparray(index_pt3)
+
+        if index_pt1 is not None and index_pt2 is not None and index_pt3 is not None:
+            triangle = [index_pt1, index_pt2, index_pt3]
+            indexes_triangles.append(triangle)
+
+    return indexes_triangles
+
+
 if __name__ == "__main__":
     # 지금 설정한 케이스 예시에는 베이스 사진이 하나기 때문에 index 0으로 설정
     target_photo = find_base_photo(user_choices)[0]
@@ -146,3 +191,5 @@ if __name__ == "__main__":
         source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
         # 사용자가 선택한 사진에서 사용자 얼굴의 landmarks 찾기
         source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
+
+        face_swap('../img_data/jh.jpeg', group_photo_path[0], source_user_landmarks, target_user_landmarks)
