@@ -160,6 +160,62 @@ def get_delaunay_traingles(img, mask, landmarks):
     return indexes_triangles
 
 
+def triangulation_two_faces(lines_space_mask, indexes_triangles, source_img, source_landmarks, target_landmarks, target_new_face):
+    # source 얼굴 들로네 삼각망을 target 얼굴 들로네 삼각망 일치하도록 변형
+    for triangle_index in indexes_triangles:
+        tr1_pt1 = source_landmarks[triangle_index[0]]
+        tr1_pt2 = source_landmarks[triangle_index[1]]
+        tr1_pt3 = source_landmarks[triangle_index[2]]
+        triangle1 = np.array([tr1_pt1, tr1_pt2, tr1_pt3], np.int32)
+
+        rect1 = cv2.boundingRect(triangle1)
+        (x, y, w, h) = rect1
+        cropped_triangle = source_img[y: y + h, x: x + w]
+        cropped_tr1_mask = np.zeros((h, w), np.uint8)
+
+        points = np.array([[tr1_pt1[0] - x, tr1_pt1[1] - y],
+                           [tr1_pt2[0] - x, tr1_pt2[1] - y],
+                           [tr1_pt3[0] - x, tr1_pt3[1] - y]], np.int32)
+
+        cv2.fillConvexPoly(cropped_tr1_mask, points, 255)
+
+        cv2.line(lines_space_mask, tr1_pt1, tr1_pt2, 255)
+        cv2.line(lines_space_mask, tr1_pt2, tr1_pt3, 255)
+        cv2.line(lines_space_mask, tr1_pt1, tr1_pt3, 255)
+        # lines_space = cv2.bitwise_and(source_img, source_img, mask=lines_space_mask)
+
+        tr2_pt1 = target_landmarks[triangle_index[0]]
+        tr2_pt2 = target_landmarks[triangle_index[1]]
+        tr2_pt3 = target_landmarks[triangle_index[2]]
+        triangle2 = np.array([tr2_pt1, tr2_pt2, tr2_pt3], np.int32)
+
+        rect2 = cv2.boundingRect(triangle2)
+        (x, y, w, h) = rect2
+
+        cropped_tr2_mask = np.zeros((h, w), np.uint8)
+
+        points2 = np.array([[tr2_pt1[0] - x, tr2_pt1[1] - y],
+                            [tr2_pt2[0] - x, tr2_pt2[1] - y],
+                            [tr2_pt3[0] - x, tr2_pt3[1] - y]], np.int32)
+
+        cv2.fillConvexPoly(cropped_tr2_mask, points2, 255)
+
+        points = np.float32(points)
+        points2 = np.float32(points2)
+        M = cv2.getAffineTransform(points, points2)
+        warped_triangle = cv2.warpAffine(cropped_triangle, M, (w, h))
+        warped_triangle = cv2.bitwise_and(warped_triangle, warped_triangle, mask=cropped_tr2_mask)
+
+        # 변형된 triangles 연결해서 얼굴 구축
+        img2_new_face_rect_area = target_new_face[y: y + h, x: x + w]
+        img2_new_face_rect_area_gray = cv2.cvtColor(img2_new_face_rect_area, cv2.COLOR_BGR2GRAY)
+        _, mask_triangles_designed = cv2.threshold(img2_new_face_rect_area_gray, 1, 255, cv2.THRESH_BINARY_INV)
+        warped_triangle = cv2.bitwise_and(warped_triangle, warped_triangle, mask=mask_triangles_designed)
+
+        img2_new_face_rect_area = cv2.add(img2_new_face_rect_area, warped_triangle)
+        target_new_face[y: y + h, x: x + w] = img2_new_face_rect_area
+
+
 if __name__ == "__main__":
     # 지금 설정한 케이스 예시에는 베이스 사진이 하나기 때문에 index 0으로 설정
     target_photo = find_base_photo(user_choices)[0]
@@ -191,5 +247,3 @@ if __name__ == "__main__":
         source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
         # 사용자가 선택한 사진에서 사용자 얼굴의 landmarks 찾기
         source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
-
-        face_swap('../img_data/jh.jpeg', group_photo_path[0], source_user_landmarks, target_user_landmarks)
