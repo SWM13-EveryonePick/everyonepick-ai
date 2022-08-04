@@ -3,6 +3,7 @@ import cv2
 from insightface.app import FaceAnalysis
 import numpy as np
 from numpy.linalg import norm as l2norm
+import matplotlib.pyplot as plt
 
 ''' 
 사용자 별로 선호하는 사진 선택 결과 예시
@@ -159,7 +160,6 @@ def get_delaunay_traingles(img, mask, landmarks):
 
     return indexes_triangles
 
-
 def triangulation_two_faces(lines_space_mask, indexes_triangles, source_img, source_landmarks, target_landmarks, target_new_face):
     # source 얼굴 들로네 삼각망을 target 얼굴 들로네 삼각망 일치하도록 변형
     for triangle_index in indexes_triangles:
@@ -216,6 +216,49 @@ def triangulation_two_faces(lines_space_mask, indexes_triangles, source_img, sou
         target_new_face[y: y + h, x: x + w] = img2_new_face_rect_area
 
 
+def face_swap(source_img_path, target_img_path, f_source_landmarks, f_target_landmarks):
+    source_img = cv2.imread(source_img_path)
+    source_img = source_img[:, :, ::-1]
+
+    target_img = cv2.imread(target_img_path)
+    target_img = target_img[:, :, ::-1]
+
+    source_img_gray = cv2.cvtColor(source_img, cv2.COLOR_BGR2GRAY)
+    mask = np.zeros_like(source_img_gray)
+    target_img_gray = cv2.cvtColor(target_img, cv2.COLOR_BGR2GRAY)
+
+    height, width, channels = target_img.shape
+    target_new_face = np.zeros((height, width, channels), np.uint8)
+
+    source_landmarks = cast_int_landmarks(f_source_landmarks)
+    target_landmarks = cast_int_landmarks(f_target_landmarks)
+
+    # target 얼굴 특징점 경계선 검출
+    points = np.array(target_landmarks, np.int32)
+    target_convexhull = cv2.convexHull(points)
+
+    indexes_triangles = get_delaunay_traingles(source_img, mask, source_landmarks)
+
+    lines_space_mask = np.zeros_like(source_img_gray)
+
+    triangulation_two_faces(lines_space_mask, indexes_triangles, source_img, source_landmarks, target_landmarks, target_new_face)
+
+    # destination 얼굴에 source 얼굴 합성하기
+    img2_face_mask = np.zeros_like(target_img_gray)
+    img2_head_mask = cv2.fillConvexPoly(img2_face_mask, target_convexhull, 255)
+    img2_face_mask = cv2.bitwise_not(img2_head_mask)
+
+    img2_head_noface = cv2.bitwise_and(target_img, target_img, mask=img2_face_mask)
+    result = cv2.add(img2_head_noface, target_new_face)
+
+    # 합성이 자연스럽도록 색 조정
+    (x, y, w, h) = cv2.boundingRect(target_convexhull)
+    center_face2 = (int((x + x + w) / 2), int((y + y + h) / 2))
+    seamlessclone = cv2.seamlessClone(result, target_img, img2_head_mask, center_face2, cv2.NORMAL_CLONE)
+
+    return seamlessclone
+
+
 if __name__ == "__main__":
     # 지금 설정한 케이스 예시에는 베이스 사진이 하나기 때문에 index 0으로 설정
     target_photo = find_base_photo(user_choices)[0]
@@ -247,3 +290,7 @@ if __name__ == "__main__":
         source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
         # 사용자가 선택한 사진에서 사용자 얼굴의 landmarks 찾기
         source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
+
+        result = face_swap(group_photo_path[target_photo], group_photo_path[1], source_user_landmarks, target_user_landmarks)
+        plt.imshow(result)
+        plt.show()
