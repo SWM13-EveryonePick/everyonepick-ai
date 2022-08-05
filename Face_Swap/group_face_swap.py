@@ -17,45 +17,53 @@ id:D → group1, group3
 face_app = FaceAnalysis('antelopev2')
 face_app.prepare(ctx_id=0, det_size=(640, 640))
 
-group_photo_path = ["../img_data/group1.jpeg", "../img_data/group2.jpeg", "../img_data/group3.jpeg"]
+group_img_path = []
+for i in range(1, 8):
+    group_img_path.append(f"../img_data/{i}.JPG")
+
 user_choices = defaultdict(list)
 
 # user_choices -> {'A': [0, 1], 'B': [0], 'C': [2], 'D': [0, 2]})
-user_choices['A'].extend([0, 1])
-user_choices['B'].append(0)
-user_choices['C'].append(2)
-user_choices['D'].extend([0, 2])
+user_choices['ys'].extend([3, 7])
+user_choices['js'].append([5, 6, 7])
+user_choices['es'].append([2, 3, 7])
+user_choices['jy'].extend([5, 6])
+user_choices['sj'].extend([4, 5, 6, 7])
+user_choices['je'].extend([3, 5, 6])
+user_choices['sy'].extend([3, 4, 6])
+user_choices['jh'].extend([4])
 
-# 가장 많은 선택을 받은 사진을 찾는 함수
-def find_base_photo(user_choices):
+
+# 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
+def find_base_img_index(user_choices):
     # 아무도 선택 하지 않은 경우
     if len(user_choices) == 0:
         return -1
 
     result = []
-    base_photo = []
+    base_img = []
 
     for choices in user_choices.values():
         result += choices
 
     # 사진 별 선택 수
-    photo_choices = Counter(result).most_common()
+    img_choices = Counter(result).most_common()
     # base 사진, 받은 선택 수
-    max_choice = photo_choices[0][1]
+    max_choice = img_choices[0][1]
 
     # base 사진의 선택 수가 중복 되는지 확인
-    for photo, choice in photo_choices:
+    for img, choice in img_choices:
         if choice == max_choice:
-            base_photo.append(photo)
+            base_img.append(img)
 
     ''' base 사진이 여러개 가능할 경우 후보군 중에 어떤 base 사진이 가장 최적인지 계산하는 코드 추가 에정
     ex. 얼굴 각도 계산을 통해 가장 자연스럽게 얼굴이 합성될 수 있는 케이스 찾기 '''
 
-    return base_photo
+    return base_img
 
 
 # face swap이 필요한 user_id와 source 사진을 찾는 함수
-def list_of_face_swap(user_choices, base_photo):
+def list_of_face_swap(user_choices, base_img):
     ''' 현재 사용자 별 선택 사진 예시로는 group3 사진에서의 사용자 C얼굴을 group1 사진에 합성하면 되지만,
     만약 사용자 C가 group2, 3을 선택했다면 group2, 3 사진 중에서 어떤 얼굴을 합성할 지 결정하는 과정 추가 예정
     ex. 얼굴 각도 계산을 통해 가장 자연스럽게 얼굴이 합성될 수 있는 케이스 찾기 '''
@@ -63,7 +71,7 @@ def list_of_face_swap(user_choices, base_photo):
     source_target_list = []
 
     for user, choices in user_choices.items():
-        if base_photo not in choices:
+        if base_img not in choices:
             # 임시로 첫 번째 선택 사진을 target 사진으로 결정
             source_target_list.append((user, choices[0]))
 
