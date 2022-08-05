@@ -260,37 +260,27 @@ def face_swap(source_img_path, target_img_path, f_source_landmarks, f_target_lan
 
 
 if __name__ == "__main__":
-    # 지금 설정한 케이스 예시에는 베이스 사진이 하나기 때문에 index 0으로 설정
-    target_photo = find_base_photo(user_choices)[0]
-    # 베이스 사진의 얼굴 정보 분석
-    target_faces = face_analysis(group_photo_path[target_photo])
-    # 베이스 사진 얼굴들의 임베딩 가져오기
+    source_img_path = '../img_data/good.JPG'
+    target_img_path = '../img_data/bad.JPG'
+    user_img_path = '../img_data/jooeun.jpg'
+
+    source_img = cv2.imread(source_img_path)
+    target_img = cv2.imread(target_img_path)
+
+    user_face = face_analysis(user_img_path)
+    source_faces = face_analysis(source_img_path)
+    target_faces = face_analysis(target_img_path)
+
+    user_embedding = user_face[0]['embedding']
+    source_embeddings = get_embeddings(source_faces)
     target_embeddings = get_embeddings(target_faces)
 
-    # face swap이 들어가야 되는 사용자와 해당 사용자가 선택한 사진 번호 반환
-    face_swap_list = list_of_face_swap(user_choices, target_photo)
+    source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
+    source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
 
-    # db에 저장된 사용자의 얼굴 정보 가져오기 (아래 코드는 임시 작성)
-    user_face = face_analysis('../img_data/jh.jpeg')
+    target_user_index = compute_face_similarity(target_embeddings, user_embedding).argmax()
+    target_user_landmarks = target_faces[target_user_index]['landmark_2d_106']
 
-    # user : C, choice : 2
-    for user, choice in face_swap_list:
-        # 사용자의 기본 임베딩 가져오기
-        user_embedding = user_face[0]['embedding']
-        # 베이스 사진에서 사용자 얼굴의 index 찾기
-        target_user_index = compute_face_similarity(target_embeddings, user_embedding).argmax()
-        # 베이스 사진에서 사용자 얼굴의 landmarks 찾기
-        target_user_landmarks = target_faces[target_user_index]['landmark_2d_106']
-
-        # 사용자가 선택한 사진의 얼굴 정보 분석
-        source_faces = face_analysis(group_photo_path[choice])
-        # 사용자가 선택한 사진 얼굴들의 임베딩 가져오기
-        source_embeddings = get_embeddings(source_faces)
-        # 사용자가 선택한 사진에서 사용자 얼굴의 index 찾기
-        source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
-        # 사용자가 선택한 사진에서 사용자 얼굴의 landmarks 찾기
-        source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
-
-        result = face_swap(group_photo_path[target_photo], group_photo_path[1], source_user_landmarks, target_user_landmarks)
-        plt.imshow(result)
-        plt.show()
+    result = face_swap(source_img_path, target_img_path, source_user_landmarks, target_user_landmarks)
+    plt.imshow(result)
+    plt.show()
