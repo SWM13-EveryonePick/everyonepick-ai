@@ -22,16 +22,27 @@ for i in range(1, 8):
     group_img_path.append(f"../img_data/{i}.JPG")
 
 user_choices = defaultdict(list)
+user_profiles = {}
 
 # user_choices -> {'A': [0, 1], 'B': [0], 'C': [2], 'D': [0, 2]})
-user_choices['ys'].extend([3, 7])
-user_choices['js'].append([5, 6, 7])
-user_choices['es'].append([2, 3, 7])
-user_choices['jy'].extend([5, 6])
-user_choices['sj'].extend([4, 5, 6, 7])
-user_choices['je'].extend([3, 5, 6])
-user_choices['sy'].extend([3, 4, 6])
-user_choices['jh'].extend([4])
+user_choices['ys'].extend([2, 6])
+user_choices['js'].extend([4, 5, 6])
+user_choices['es'].extend([1, 2, 6])
+user_choices['jy'].extend([4, 5])
+user_choices['sj'].extend([3, 4, 5, 6])
+user_choices['je'].extend([2, 4, 5])
+user_choices['sy'].extend([2, 3, 5])
+user_choices['jh'].extend([3])
+
+
+user_profiles['ys'] = "../img_data/ys.jpeg"
+user_profiles['js'] = "../img_data/js.jpeg"
+user_profiles['es'] = "../img_data/es.jpeg"
+user_profiles['jy'] = "../img_data/jy.jpeg"
+user_profiles['sj'] = "../img_data/sj.jpeg"
+user_profiles['je'] = "../img_data/je.jpeg"
+user_profiles['sy'] = "../img_data/sy.jpeg"
+user_profiles['jh'] = "../img_data/jh.jpeg"
 
 
 # 가장 많은 선택을 받은 사진의 인덱스를 찾는 함수
@@ -224,12 +235,12 @@ def triangulation_two_faces(lines_space_mask, indexes_triangles, source_img, sou
         target_new_face[y: y + h, x: x + w] = img2_new_face_rect_area
 
 
-def face_swap(source_img_path, target_img_path, f_source_landmarks, f_target_landmarks):
-    source_img = cv2.imread(source_img_path)
-    source_img = source_img[:, :, ::-1]
+def face_swap(source_img, target_img, f_source_landmarks, f_target_landmarks):
+    # source_img = cv2.imread(source_img_path)
+    # source_img = source_img[:, :, ::-1]
 
-    target_img = cv2.imread(target_img_path)
-    target_img = target_img[:, :, ::-1]
+    # target_img = cv2.imread(target_img_path)
+    # target_img = target_img[:, :, ::-1]
 
     source_img_gray = cv2.cvtColor(source_img, cv2.COLOR_BGR2GRAY)
     mask = np.zeros_like(source_img_gray)
@@ -267,28 +278,67 @@ def face_swap(source_img_path, target_img_path, f_source_landmarks, f_target_lan
     return seamlessclone
 
 
+''' face swap 함수 테스트 (사용자 선택 고려 O)'''
 if __name__ == "__main__":
-    source_img_path = '../img_data/good.JPG'
-    target_img_path = '../img_data/bad.JPG'
-    user_img_path = '../img_data/jooeun.jpg'
-
-    source_img = cv2.imread(source_img_path)
+    # 지금은 베이스 사진이 여러개가 가능할 경우를 무시함
+    target_img_index = find_base_img_index(user_choices)[0]
+    target_img_path = group_img_path[target_img_index]
     target_img = cv2.imread(target_img_path)
-
-    user_face = face_analysis(user_img_path)
-    source_faces = face_analysis(source_img_path)
+    target_img = target_img[:, :, ::-1]
     target_faces = face_analysis(target_img_path)
-
-    user_embedding = user_face[0]['embedding']
-    source_embeddings = get_embeddings(source_faces)
     target_embeddings = get_embeddings(target_faces)
 
-    source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
-    source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
+    face_swap_list = list_of_face_swap(user_choices, target_img_index)
 
-    target_user_index = compute_face_similarity(target_embeddings, user_embedding).argmax()
-    target_user_landmarks = target_faces[target_user_index]['landmark_2d_106']
+    for user, choice in face_swap_list:
+        user_img_path = user_profiles[user]
+        source_img_path = group_img_path[choice]
+        source_img = cv2.imread(source_img_path)
+        source_img = source_img[:, :, ::-1]
 
-    result = face_swap(source_img_path, target_img_path, source_user_landmarks, target_user_landmarks)
-    plt.imshow(result)
-    plt.show()
+        user_face = face_analysis(user_img_path)
+        source_faces = face_analysis(source_img_path)
+
+        user_embedding = user_face[0]['embedding']
+        source_embeddings = get_embeddings(source_faces)
+
+        target_user_face_index = compute_face_similarity(target_embeddings, user_embedding).argmax()
+        source_user_face_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
+
+        target_face_landmarks = target_faces[target_user_face_index]['landmark_2d_106']
+        source_face_landmarks = source_faces[source_user_face_index]['landmark_2d_106']
+
+        swap_result = face_swap(source_img, target_img, source_face_landmarks, target_face_landmarks)
+        target_img = swap_result
+        plt.imshow(target_img)
+        plt.show()
+
+
+# ''' face swap 함수 테스트 (사용자 선택 고려 X)'''
+# if __name__ == "__main__":
+#     source_img_path = '../img_data/3.JPG'
+#     target_img_path = '../img_data/6.JPG'
+#     user_img_path = '../img_data/ys.jpeg'
+#
+#     source_img = cv2.imread(source_img_path)
+#     source_img = source_img[:, :, ::-1]
+#     target_img = cv2.imread(target_img_path)
+#     target_img = target_img[:, :, ::-1]
+#
+#     user_face = face_analysis(user_img_path)
+#     source_faces = face_analysis(source_img_path)
+#     target_faces = face_analysis(target_img_path)
+#
+#     user_embedding = user_face[0]['embedding']
+#     source_embeddings = get_embeddings(source_faces)
+#     target_embeddings = get_embeddings(target_faces)
+#
+#     source_user_index = compute_face_similarity(source_embeddings, user_embedding).argmax()
+#     source_user_landmarks = source_faces[source_user_index]['landmark_2d_106']
+#
+#     target_user_index = compute_face_similarity(target_embeddings, user_embedding).argmax()
+#     target_user_landmarks = target_faces[target_user_index]['landmark_2d_106']
+#
+#     result = face_swap(source_img, target_img, source_user_landmarks, target_user_landmarks)
+#     plt.imshow(result)
+#     plt.show()
