@@ -2,5 +2,6 @@
 *.png
 *.jpeg
 *.dat
+*.onnx
 .ipynb_checkpoints/
 .DS_Store
