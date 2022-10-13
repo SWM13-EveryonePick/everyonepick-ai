@@ -75,15 +75,15 @@ class FaceRecognitionRunnable(bentoml.Runnable):
         return embedding
 
 
-face_recognize_runner = bentoml.Runner(FaceRecognitionRunnable, name="face_recognize")
-svc = bentoml.Service("face_recognizer", runners=[face_recognize_runner])
-
-input_spec = Multipart(img=Image(), kps=NumpyNdarray())
-
-
-@svc.api(input=input_spec, output=NumpyNdarray())
-async def recognize(img, kps):
-    np_img = np.array(img)
-    cv_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
-    embedding = await face_recognize_runner.recognize.async_run(cv_img, kps)
-    return embedding
+# face_recognize_runner = bentoml.Runner(FaceRecognitionRunnable, name="face_recognize")
+# svc = bentoml.Service("face_recognizer", runners=[face_recognize_runner])
+#
+# input_spec = Multipart(img=Image(), kps=NumpyNdarray())
+#
+#
+# @svc.api(input=input_spec, output=NumpyNdarray())
+# async def recognize(img, kps):
+#     np_img = np.array(img)
+#     cv_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
+#     embedding = await face_recognize_runner.recognize.async_run(cv_img, kps)
+#     return embedding

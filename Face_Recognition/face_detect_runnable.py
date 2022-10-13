@@ -242,12 +242,12 @@ class FaceDetectRunnable(bentoml.Runnable):
         return det, kpss
 
 
-face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect")
-svc = bentoml.Service("face_detector", runners=[face_detect_runner])
-
-@svc.api(input=Image(), output=JSON())
-async def detect(input_img):
-    np_img = np.array(input_img)
-    img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
-    bboxes, kpss = await face_detect_runner.detect.async_run(img)
-    return {'bbox':bboxes, 'kps':kpss}
+# face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect")
+# svc = bentoml.Service("face_detector", runners=[face_detect_runner])
+#
+# @svc.api(input=Image(), output=JSON())
+# async def detect(input_img):
+#     np_img = np.array(input_img)
+#     img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
+#     bboxes, kpss = await face_detect_runner.detect.async_run(img)
+#     return {'bbox':bboxes, 'kps':kpss}
