@@ -1,4 +1,5 @@
 import bentoml
+from bentoml.io import *
 import onnxruntime
 import numpy as np
 import cv2
@@ -57,6 +58,8 @@ class FaceDetectRunnable(bentoml.Runnable):
         self.session = onnxruntime.InferenceSession(self.model_file, None)
         self.session.set_providers(['CPUExecutionProvider'])
         self.nms_thresh = 0.4
+        self.batched = False
+        self.center_cache = {}
         self._init_vars()
 
     def _init_vars(self):
@@ -237,3 +240,12 @@ class FaceDetectRunnable(bentoml.Runnable):
             if kpss is not None:
                 kpss = kpss[bindex, :]
         return det, kpss
+
+
+face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect")
+svc = bentoml.Service("face_detector", runners=[face_detect_runner])
+
+@svc.api(input=Image(), output=JSON())
+async def detect(input_img):
+    bboxes, kpss = await face_detect_runner.detect.async_run(input_img)
+    return {'bbox':bboxes, 'kps':kpss}
