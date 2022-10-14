@@ -7,7 +7,11 @@ include:
 python:
    packages:  # Additional pip packages required by the service
    - numpy
-   - cv2
+   - opencv-python
    - onnx
    - onnxruntime
-   - skimage
+   - scikit-image
+docker:
+  system_packages:
+    - libgl1-mesa-glx
+    - libglib2.0-0
