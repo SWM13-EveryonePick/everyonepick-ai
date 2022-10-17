@@ -1,9 +1,6 @@
 import bentoml
-from bentoml.io import *
 import numpy as np
 import cv2
-import onnx
-import onnxruntime
 import face_align
 
 
@@ -12,18 +9,17 @@ class FaceRecognitionRunnable(bentoml.Runnable):
     SUPPORTS_CPU_MULTI_THREADING = True
 
     def __init__(self):
-        self.model_file = "../glintr100.onnx"
-        self.session = onnxruntime.InferenceSession(self.model_file, None)
+        self.session = bentoml.onnx.load_model("face_recognition:latest")
         self.session.set_providers(['CPUExecutionProvider'])
         find_sub = False
         find_mul = False
-        model = onnx.load(self.model_file)
-        graph = model.graph
-        for nid, node in enumerate(graph.node[:8]):
-            if node.name.startswith('Sub') or node.name.startswith('_minus'):
-                find_sub = True
-            if node.name.startswith('Mul') or node.name.startswith('_mul'):
-                find_mul = True
+        # model = onnx.load(self.model_file)
+        # graph = model.graph
+        # for nid, node in enumerate(graph.node[:8]):
+        #     if node.name.startswith('Sub') or node.name.startswith('_minus'):
+        #         find_sub = True
+        #     if node.name.startswith('Mul') or node.name.startswith('_mul'):
+        #         find_mul = True
         if find_sub and find_mul:
             input_mean = 0.0
             input_std = 1.0
@@ -75,11 +71,10 @@ class FaceRecognitionRunnable(bentoml.Runnable):
         return embedding
 
 
-# face_recognize_runner = bentoml.Runner(FaceRecognitionRunnable, name="face_recognize")
+# face_recognize_runner = bentoml.Runner(FaceRecognitionRunnable, name="face_recognize_runner", models=[bentoml.onnx.get("face_recognition:latest")])
 # svc = bentoml.Service("face_recognizer", runners=[face_recognize_runner])
 #
 # input_spec = Multipart(img=Image(), kps=NumpyNdarray())
-#
 #
 # @svc.api(input=input_spec, output=NumpyNdarray())
 # async def recognize(img, kps):

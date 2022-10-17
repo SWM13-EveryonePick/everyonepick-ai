@@ -1,6 +1,4 @@
 import bentoml
-from bentoml.io import *
-import onnxruntime
 import numpy as np
 import cv2
 
@@ -54,8 +52,7 @@ class FaceDetectRunnable(bentoml.Runnable):
     SUPPORTS_CPU_MULTI_THREADING = True
 
     def __init__(self):
-        self.model_file = '../scrfd_10g_bnkps.onnx'
-        self.session = onnxruntime.InferenceSession(self.model_file, None)
+        self.session = bentoml.onnx.load_model("face_detection:latest")
         self.session.set_providers(['CPUExecutionProvider'])
         self.nms_thresh = 0.4
         self.batched = False
@@ -125,7 +122,6 @@ class FaceDetectRunnable(bentoml.Runnable):
                 bbox_preds = bbox_preds * stride
                 if self.use_kps:
                     kps_preds = net_outs[idx + fmc * 2] * stride
-
             height = input_height // stride
             width = input_width // stride
             K = height * width
@@ -140,7 +136,6 @@ class FaceDetectRunnable(bentoml.Runnable):
                     anchor_centers = np.stack([anchor_centers] * self._num_anchors, axis=1).reshape((-1, 2))
                 if len(self.center_cache) < 100:
                     self.center_cache[key] = anchor_centers
-
             pos_inds = np.where(scores >= thresh)[0]
             bboxes = distance2bbox(anchor_centers, bbox_preds)
             pos_scores = scores[pos_inds]
@@ -242,7 +237,7 @@ class FaceDetectRunnable(bentoml.Runnable):
         return det, kpss
 
 
-# face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect")
+# face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect_runner", models=[bentoml.onnx.get("face_detection:latest")])
 # svc = bentoml.Service("face_detector", runners=[face_detect_runner])
 #
 # @svc.api(input=Image(), output=JSON())
