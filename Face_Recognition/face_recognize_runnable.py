@@ -2,7 +2,8 @@ import bentoml
 import numpy as np
 import cv2
 import face_align
-
+import io
+import boto3
 
 class FaceRecognitionRunnable(bentoml.Runnable):
     SUPPORTED_RESOURCES = ("cpu")
@@ -11,6 +12,7 @@ class FaceRecognitionRunnable(bentoml.Runnable):
     def __init__(self):
         self.session = bentoml.onnx.load_model("face_recognition:latest")
         self.session.set_providers(['CPUExecutionProvider'])
+        self.s3 = boto3.client('s3', region_name='ap-northeast-2')
         find_sub = False
         find_mul = False
         # model = onnx.load(self.model_file)
@@ -65,9 +67,12 @@ class FaceRecognitionRunnable(bentoml.Runnable):
         return net_out
 
     @bentoml.Runnable.method(batchable=False)
-    def recognize(self, img, kps):
+    def recognize(self, img, kps, user_id):
         aimg = face_align.norm_crop(img, kps)
         embedding = self.get_feat(aimg).flatten()
+        str_embedding = np.array2string(embedding)
+        byte_embedding = io.BytesIO(str_embedding.encode())
+        self.s3.upload_fileobj(byte_embedding, 'everyonepick-ai-face-embedding-bucket', f"face{user_id}_embedding.txt")
         return embedding
 
 
