@@ -18,11 +18,11 @@ if not os.path.exists(download_path):
 
 if not os.path.exists(os.path.join(download_path, detection_model_file)):
     client = boto3.client('s3', region_name='ap-northeast-2')
-    client.download_file('everyonepick-ai-bucket', detection_model_file, os.path.join(download_path, detection_model_file))
+    client.download_file('everyonepick-ai-model-bucket', detection_model_file, os.path.join(download_path, detection_model_file))
 
 if not os.path.exists(os.path.join(download_path, recognition_model_file)):
     client = boto3.client('s3', region_name='ap-northeast-2')
-    client.download_file('everyonepick-ai-bucket', recognition_model_file, os.path.join(download_path, recognition_model_file))
+    client.download_file('everyonepick-ai-model-bucket', recognition_model_file, os.path.join(download_path, recognition_model_file))
 
 try:
     bentoml.onnx.load_model(detection_model_name)
