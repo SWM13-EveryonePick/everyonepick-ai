@@ -11,6 +11,7 @@ python:
    - onnx
    - onnxruntime
    - scikit-image
+   - boto3
 docker:
   system_packages:
     - libgl1-mesa-glx
