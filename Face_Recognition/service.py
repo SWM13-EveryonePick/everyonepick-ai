@@ -21,4 +21,4 @@ async def recognize(image, user_id):
     cv_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
     bboxes, kpss = await face_detect_runner.detect.async_run(cv_img)
     embedding = await face_recognize_runner.recognize.async_run(cv_img, kpss[0], user_id)
-    return {"user_id":user_id, "face_embedding":embedding}
+    return {"message":"ok", "data":{"user_id":user_id, "face_embedding":embedding}}
