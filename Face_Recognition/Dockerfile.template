@@ -1,0 +1,10 @@
+{% extends bento_base_template %}
+{% block SETUP_BENTO_BASE_IMAGE %}
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_ACCESS_KEY_ID
+{{ super() }}
+
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_ACCESS_KEY_ID
+
+{% endblock %}
