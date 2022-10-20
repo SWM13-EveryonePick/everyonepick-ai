@@ -64,7 +64,7 @@ class FaceRecognitionRunnable(bentoml.Runnable):
         return net_out
 
     @bentoml.Runnable.method(batchable=False)
-    def recognize(self, img, kps, user_id):
+    def recognize(self, img, kps):
         aimg = face_align.norm_crop(img, kps)
         embedding = self.get_feat(aimg).flatten()
         return embedding
