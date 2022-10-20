@@ -12,7 +12,9 @@ python:
    - onnxruntime
    - scikit-image
    - boto3
+   - awscli
 docker:
+  dockerfile_template: ./Dockerfile.template
   system_packages:
     - libgl1-mesa-glx
     - libglib2.0-0
