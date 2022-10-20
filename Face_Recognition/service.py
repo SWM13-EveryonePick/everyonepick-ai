@@ -4,7 +4,8 @@ import bentoml
 from bentoml.io import *
 import cv2
 import numpy as np
-
+import boto3
+import io
 
 face_detect_runner = bentoml.Runner(FaceDetectRunnable, name="face_detect", models=[bentoml.onnx.get("face_detection:latest")])
 face_recognize_runner = bentoml.Runner(FaceRecognitionRunnable, name="face_recognize_runner", models=[bentoml.onnx.get("face_recognition:latest")])
@@ -21,4 +22,8 @@ async def recognize(image, user_id):
     cv_img = cv2.cvtColor(np_img, cv2.COLOR_RGB2BGR)
     bboxes, kpss = await face_detect_runner.detect.async_run(cv_img)
     embedding = await face_recognize_runner.recognize.async_run(cv_img, kpss[0], user_id)
-    return {"message":"ok", "data":{"user_id":user_id, "face_embedding":embedding}}
+    str_embedding = np.array2string(embedding)
+    byte_embedding = io.BytesIO(str_embedding.encode())
+    s3 = boto3.client('s3')
+    s3.upload_fileobj(byte_embedding, 'everyonepick-ai-face-embedding-bucket', f"face{user_id}_embedding.txt")
+    return {"message":"Ok", "data":{"user_id":user_id, "face_embedding":embedding}}
