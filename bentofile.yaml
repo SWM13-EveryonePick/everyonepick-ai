@@ -13,6 +13,7 @@ python:
    - scikit-image
    - boto3
    - awscli
+   - pydantic
 docker:
   dockerfile_template: ./Dockerfile.template
   system_packages:
